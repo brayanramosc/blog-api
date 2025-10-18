@@ -69,4 +69,9 @@ export class UsersService {
     if (!user) throw new NotFoundException('User not found');
     return user;
   }
+
+  async getUserByEmail(email: string) {
+    const user = await this.usersRepository.findOne({ where: { email } });
+    return user;
+  }
 }
