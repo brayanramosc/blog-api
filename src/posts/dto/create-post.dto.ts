@@ -30,10 +30,6 @@ export class CreatePostDto {
   @IsOptional()
   summary?: string;
 
-  @IsInt()
-  @IsNotEmpty()
-  userId: number;
-
   @IsArray()
   @IsInt({ each: true })
   @IsPositive({ each: true })

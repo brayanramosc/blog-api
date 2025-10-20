@@ -25,11 +25,11 @@ export class PostsService {
     return post;
   }
 
-  async create(post: CreatePostDto) {
+  async create(post: CreatePostDto, userId: number) {
     try {
       const newPost = await this.postsRepository.save({
         ...post,
-        author: { id: post.userId },
+        author: { id: userId },
         categories: post.categoryIds?.map((id) => ({ id })),
       });
       return this.findPost(newPost.id);
