@@ -1,17 +1,20 @@
 import {
   BadRequestException,
+  ForbiddenException,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
+import { Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
+import { OpenaiService } from 'src/ai/services/openai.service';
 import { CreatePostDto, UpdatePostDto } from '../dto/index';
 import { Post } from '../entities/post.entity';
-import { Repository } from 'typeorm';
 
 @Injectable()
 export class PostsService {
   constructor(
     @InjectRepository(Post) private readonly postsRepository: Repository<Post>,
+    private readonly openaiService: OpenaiService,
   ) {}
 
   async findAll() {
@@ -64,5 +67,25 @@ export class PostsService {
     });
     if (!post) throw new NotFoundException('Post not found');
     return post;
+  }
+
+  async publish(id: number, userId: number) {
+    const post = await this.findPost(id);
+
+    if (post.author.id !== userId)
+      throw new ForbiddenException('You are not allowed to publish this post');
+    if (!post.content || !post.title || !post.categories.length)
+      throw new BadRequestException('Post content is required');
+
+    const summary = await this.openaiService.generateSummary(post.content);
+    const coverImage = await this.openaiService.generateImage(summary);
+    const newPost = this.postsRepository.merge(post, {
+      isDraft: false,
+      summary,
+      coverImage,
+    });
+
+    const updatedPost = await this.postsRepository.save(newPost);
+    return this.findPost(updatedPost.id);
   }
 }

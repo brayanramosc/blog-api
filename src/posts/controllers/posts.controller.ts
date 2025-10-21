@@ -48,6 +48,13 @@ export class PostsController {
   }
 
   @UseGuards(AuthGuard('jwt'))
+  @Put(':id/publish')
+  publish(@Param('id', ParseIntPipe) id: number, @Req() req: Request) {
+    const user = req.user as Payload;
+    return this.postsService.publish(id, user.sub);
+  }
+
+  @UseGuards(AuthGuard('jwt'))
   @Delete(':id')
   remove(@Param('id', ParseIntPipe) id: number) {
     return this.postsService.delete(id);
